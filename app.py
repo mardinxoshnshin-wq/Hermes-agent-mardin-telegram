@@ -1,11 +1,12 @@
 import os
+import asyncio
 from flask import Flask
 from threading import Thread
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-from google import genai
+from hermes_agent import HermesAgent
 
-# ۱. راه‌اندازی وب‌سرور برای بیدار نگه داشتن برنامه در Render
+# ۱. وب‌سرور برای زنده نگه داشتن برنامه در Render
 app = Flask(__name__)
 
 @app.route('/')
@@ -16,36 +17,28 @@ def run_flask():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
-# ۲. تنظیم کلید Gemini
-gemini_api_key = os.environ.get("GEMINI_API_KEY")
-ai_client = genai.Client(api_key=gemini_api_key) if gemini_api_key else None
+# ۲. مقداردهی اولیه ایجنت هرمس
+# می‌توان کلید Together AI، Groq یا OpenAI را برای ارائه مدل پایه هرمس داد
+api_key = os.environ.get("HERMES_API_KEY") or os.environ.get("GEMINI_API_KEY")
+agent = HermesAgent(api_key=api_key)
 
-# ۳. دستورات ربات تلگرام
+# ۳. هندل کردن پیام‌های تلگرام توسط Hermes Agent
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("سلام! من ایجنت هرمس هستم. چطور می‌توانم کمکتان کنم؟")
+    await update.message.reply_text("سلام! من ایجنت هرمس (Nous Research) هستم. چطور می‌توانم کمکتان کنم؟")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     
-    if not ai_client:
-        await update.message.reply_text("خطا: کلید API جمینای تنظیم نشده است.")
-        return
-        
     try:
-        # ارسال درخواست به مدل Gemini 3.6 Flash
-        response = ai_client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=user_text,
-        )
-        await update.message.reply_text(response.text)
+        # ارسال ورودی کاربر به ایجنت اصلی هرمس
+        response = await agent.run(user_text)
+        await update.message.reply_text(str(response))
     except Exception as e:
-        await update.message.reply_text(f"خطایی رخ داد: {str(e)}")
+        await update.message.reply_text(f"خطا در اجرای ایجنت: {str(e)}")
 
 if __name__ == '__main__':
-    # اجرای وب‌سرور در پس‌‌زمینه
     Thread(target=run_flask).start()
     
-    # اجرای ربات تلگرام
     bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
     application = ApplicationBuilder().token(bot_token).build()
     
