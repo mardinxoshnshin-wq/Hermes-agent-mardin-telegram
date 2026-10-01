@@ -32,9 +32,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
         
     try:
-        # استفاده از مدل جدید Gemini 3.8 Flash
+        # ارسال درخواست به مدل Gemini 3.6 Flash
         response = ai_client.models.generate_content(
-            model='gemini-3.8-flash',
+            model='gemini-3.6-flash',
             contents=user_text,
         )
         await update.message.reply_text(response.text)
@@ -42,7 +42,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"خطایی رخ داد: {str(e)}")
 
 if __name__ == '__main__':
-    # اجرای وب‌سرور در پس‌زمینه
+    # اجرای وب‌سرور در پس‌‌زمینه
     Thread(target=run_flask).start()
     
     # اجرای ربات تلگرام
