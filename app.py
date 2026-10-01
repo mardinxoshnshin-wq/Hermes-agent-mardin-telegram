@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from google import genai
 
-# ۱. راه اندازی وب‌سرور برای بیدار نگه داشتن برنامه در Render
+# ۱. راه‌اندازی وب‌سرور برای بیدار نگه داشتن برنامه در Render
 app = Flask(__name__)
 
 @app.route('/')
@@ -32,9 +32,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
         
     try:
-        # ارسال درخواست به مدل Gemini
+        # استفاده از مدل جدید Gemini 3.8 Flash
         response = ai_client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.8-flash',
             contents=user_text,
         )
         await update.message.reply_text(response.text)
