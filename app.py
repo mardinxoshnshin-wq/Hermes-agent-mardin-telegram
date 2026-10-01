@@ -11,30 +11,34 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Hermes Agent is Alive!"
+    return "Hermes Agent (Powered by Gemini 3.6 Flash) is Alive!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
-# ۲. مقداردهی اولیه ایجنت هرمس
-# می‌توان کلید Together AI، Groq یا OpenAI را برای ارائه مدل پایه هرمس داد
-api_key = os.environ.get("HERMES_API_KEY") or os.environ.get("GEMINI_API_KEY")
-agent = HermesAgent(api_key=api_key)
+# ۲. اتصال Hermes Agent به مدل Gemini 3.6 Flash
+api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 
-# ۳. هندل کردن پیام‌های تلگرام توسط Hermes Agent
+agent = HermesAgent(
+    provider="google",               # استفاده از سرویس نیتیو گوگل
+    model="gemini-3.6-flash",        # مدل Gemini 3.6 Flash
+    api_key=api_key
+)
+
+# ۳. پاسخ‌دهی تلگرام
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("سلام! من ایجنت هرمس (Nous Research) هستم. چطور می‌توانم کمکتان کنم؟")
+    await update.message.reply_text("سلام! من Hermes Agent هستم که از مدل Gemini 3.6 Flash نیرو می‌گیرم.")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
     
     try:
-        # ارسال ورودی کاربر به ایجنت اصلی هرمس
+        # پردازش پیام توسط ایجنت هرمس (همراه با حافظه و ابزارها)
         response = await agent.run(user_text)
         await update.message.reply_text(str(response))
     except Exception as e:
-        await update.message.reply_text(f"خطا در اجرای ایجنت: {str(e)}")
+        await update.message.reply_text(f"خطا در پردازش ایجنت: {str(e)}")
 
 if __name__ == '__main__':
     Thread(target=run_flask).start()
